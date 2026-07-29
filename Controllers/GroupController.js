@@ -1,7 +1,7 @@
 import GroupName from '../models/GroupSchema.js'
 
-export  async function CreateGroup(req , res){
-    console.log(req.body)
+export async function CreateGroup(req , res){
+    // console.log(req.body)
     try{
         const {groupName , userIds} = req.body;
         const group = new GroupName({
