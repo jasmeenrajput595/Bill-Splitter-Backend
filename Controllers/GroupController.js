@@ -1,12 +1,12 @@
 import GroupName from '../models/GroupSchema.js'
 
 export async function CreateGroup(req , res){
-    // console.log(req.body)
     try{
+        console.log(req.body)
         const {groupName , userIds} = req.body;
         const group = new GroupName({
-            groupName ,
-             userIds
+            groupName,
+            userIds
             });
             await group.save();
             res.status(201).json({
@@ -20,3 +20,40 @@ export async function CreateGroup(req , res){
             })
         }
 }
+
+
+//  get groups..
+export async function GetGroups(req, res) {
+  try {
+    const groups = await GroupName.find();
+
+    res.status(200).json({
+      message: "Got users successfullyy",
+      groups,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Something went wrong",
+      error,
+    });
+  }
+}
+
+// //  get single group
+// export async function GetSingleGroup(req, res) {
+//   try {
+//     const group = await GroupName.findById(req.params.id);
+
+//     if (!group) {
+//       return res.status(404).json({
+//         message: "Group not found",
+//       });
+//     }
+
+//     res.status(200).json(group);
+//   } catch (error) {
+//     res.status(500).json({
+//       message: error.message,
+//     });
+//   }
+// }

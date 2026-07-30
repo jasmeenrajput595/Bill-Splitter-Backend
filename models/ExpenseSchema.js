@@ -10,7 +10,7 @@ const ExpenseSchema = new mongoose.Schema({
         required:true,
     },
     amount:{
-        type: String,
+        type: Number,
         required:true,
     },
     groupId:{
@@ -21,6 +21,10 @@ const ExpenseSchema = new mongoose.Schema({
         type: String,
         required:true,
     },
+    splitBetween:{
+    type:[String],
+    required:true
+}
 })
 const Expense = mongoose.model("expenses", ExpenseSchema)
 export default Expense;
