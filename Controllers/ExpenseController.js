@@ -17,10 +17,10 @@ export async function CreateExpense(req , res){
             expense
         });
     }catch(error){
-        // res.status(500).json({
-        //     message: "Expense not created..",
+        res.status(500).json({
+            message: "Expense not created..",
             error
-        // });
+        });
     }
 
 }  
