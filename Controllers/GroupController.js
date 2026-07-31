@@ -39,21 +39,3 @@ export async function GetGroups(req, res) {
   }
 }
 
-// //  get single group
-// export async function GetSingleGroup(req, res) {
-//   try {
-//     const group = await GroupName.findById(req.params.id);
-
-//     if (!group) {
-//       return res.status(404).json({
-//         message: "Group not found",
-//       });
-//     }
-
-//     res.status(200).json(group);
-//   } catch (error) {
-//     res.status(500).json({
-//       message: error.message,
-//     });
-//   }
-// }

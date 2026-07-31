@@ -7,12 +7,10 @@ const router = express.Router();
 
 router.post('/createGroup' , CreateGroup)
 router.get("/groups", GetGroups);
-// router.get("/groups/:id", GetSingleGroup);
 
 router.post('/createExpense' , CreateExpense)
 router.get("/expenses/:groupId", GetExpenses);
-// router.get("/expense/:id", GetSingleExpense);
-// router.delete("/expense/:id", DeleteExpense);
+
 
 router.get("/balance/:groupId", GetBalance);
 router.get("/settleup/:groupId", GetSettleUp);
