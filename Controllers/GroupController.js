@@ -15,7 +15,7 @@ export async function CreateGroup(req , res){
             })
         }catch(error){
             res.status(500).json({
-                message : "Something went wrong hghhghg",
+                message : "Something went wrong ",
                 error
             })
         }
