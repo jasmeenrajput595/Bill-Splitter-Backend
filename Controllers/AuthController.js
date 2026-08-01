@@ -1,4 +1,4 @@
-import User from '../models/UserSchema'
+import User from '../models/UserSchema.js'
 export async function Register(req, res) {
   console.log("errorrr")
   try {
