@@ -25,10 +25,12 @@ export async function CreateGroup(req , res){
 //  get groups..
 export async function GetGroups(req, res) {
   try {
-    const groups = await GroupName.find();
+    const groups = await GroupName.find({
+      userIds : req.params.userIds,
+    });
 
     res.status(200).json({
-      message: "Got users successfullyy",
+      message: "Got Groups successfullyy",
       groups,
     });
   } catch (error) {

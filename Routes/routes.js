@@ -1,13 +1,13 @@
 import express from 'express'
 import {CreateGroup,GetGroups} from "../Controllers/GroupController.js";
 import { CreateExpense,GetExpenses ,GetBalance, GetSettleUp} from "../Controllers/ExpenseController.js";
-import { Login , getLoginDetails} from '../Controllers/LoginController.js';
+import { Register , GetUsers , Login} from '../Controllers/AuthController.js'
 
 
 const router = express.Router();
 
 router.post('/createGroup' , CreateGroup)
-router.get("/groups", GetGroups);
+router.get("/groups/:userId", GetGroups);
 
 router.post('/createExpense' , CreateExpense)
 router.get("/expenses/:groupId", GetExpenses);
@@ -16,7 +16,8 @@ router.get("/expenses/:groupId", GetExpenses);
 router.get("/balance/:groupId", GetBalance);
 router.get("/settleup/:groupId", GetSettleUp);
 
-router.post("/login", Login)
-router.get("/loginDetails", getLoginDetails)
+router.post("/register", Register)
+router.post("/Login", Login)
+router.get("/getUsers", GetUsers)
 
 export default router;
