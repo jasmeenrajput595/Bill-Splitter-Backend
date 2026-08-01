@@ -18,6 +18,6 @@ router.get("/settleup/:groupId", GetSettleUp);
 
 router.post("/register", Register)
 router.post("/Login", Login)
-router.get("/getUsers", GetUsers)
+router.get("/users", GetUsers)
 
 export default router;

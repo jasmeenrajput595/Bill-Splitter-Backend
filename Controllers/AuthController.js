@@ -9,20 +9,20 @@ export async function Register(req, res) {
         message: "Email already exists"
       })
     }
-    const User = new UserLogin({
+    const user = new User({
       name,
       email,
       password,
     });
-    await User.save();
+    await user.save();
     res.status(201).json({
       message: "Registeration successfully",
-      User,
+      user,
     });
   } catch (error) {
     res.status(500).json({
       message: "Something went wrong here",
-      error,
+      error: error.message
     });
   }
 }

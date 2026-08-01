@@ -25,19 +25,23 @@ export async function CreateGroup(req , res){
 //  get groups..
 export async function GetGroups(req, res) {
   try {
+    console.log("user id:", req.params.userId);
+
     const groups = await GroupName.find({
-      userIds : req.params.userIds,
+      userIds: req.params.userId,
     });
+
+    console.log("Groups found:", groups);
 
     res.status(200).json({
       message: "Got Groups successfullyy",
       groups,
     });
+
   } catch (error) {
     res.status(500).json({
       message: "Something went wrong",
-      error,
+      error
     });
   }
 }
-
