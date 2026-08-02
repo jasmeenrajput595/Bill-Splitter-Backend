@@ -1,23 +1,41 @@
-import express from 'express'
-import {CreateGroup,GetGroups} from "../Controllers/GroupController.js";
-import { CreateExpense,GetExpenses ,GetBalance, GetSettleUp} from "../Controllers/ExpenseController.js";
-import { Register , GetUsers , Login} from '../Controllers/AuthController.js'
+import express from "express";
 
+import { register, login, getUsers } from "../controllers/authController.js";
+import authMiddleware from "../middleware/authMiddleware.js";
+
+import {
+  createGroup,
+  getGroups,
+} from "../controllers/groupController.js";
+
+import {
+  createExpense,
+  getExpenses,
+  getBalance,
+  getSettleUp,
+} from "../controllers/expenseController.js";
+import { payNow } from "../controllers/paymentController.js";
 
 const router = express.Router();
 
-router.post('/createGroup' , CreateGroup)
-router.get("/groups/:userId", GetGroups);
+// Auth
+router.post("/register", register);
+router.post("/login", login);
+router.get("/users", authMiddleware, getUsers);
 
-router.post('/createExpense' , CreateExpense)
-router.get("/expenses/:groupId", GetExpenses);
+
+router.post("/groups", authMiddleware, createGroup);
+router.get("/groups", authMiddleware, getGroups);
 
 
-router.get("/balance/:groupId", GetBalance);
-router.get("/settleup/:groupId", GetSettleUp);
+router.post("/expenses", authMiddleware, createExpense);
+router.get("/expenses/:groupId", authMiddleware, getExpenses);
 
-router.post("/register", Register)
-router.post("/Login", Login)
-router.get("/users", GetUsers)
+router.get("/balance/:groupId", authMiddleware, getBalance);
+
+
+router.get("/settle-up/:groupId", authMiddleware, getSettleUp);
+
+router.post("/payment", authMiddleware, payNow);
 
 export default router;

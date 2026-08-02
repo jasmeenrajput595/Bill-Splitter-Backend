@@ -1,76 +1,154 @@
-import User from '../models/UserSchema.js'
-export async function Register(req, res) {
-  console.log("errorrr")
+import User from "../models/User.js";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+
+
+export const register = async (req, res) => {
   try {
-    const {name, email, password } = req.body;
-    const existingUser = await User.findOne({email})
-    if(existingUser){
+    const { name, email, password } = req.body;
+
+
+    if (!name || !email || !password) {
       return res.status(400).json({
-        message: "Email already exists"
-      })
+        success: false,
+        message: "All fields are required",
+      });
     }
-    const user = new User({
+
+
+    const existingUser = await User.findOne({ email });
+
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "Email already registered",
+      });
+    }
+
+    // hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = await User.create({
       name,
       email,
-      password,
+      password: hashedPassword,
     });
-    await user.save();
+
+    // token 
+    const token = jwt.sign(
+      {
+        id: newUser._id,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "7d",
+      }
+    );
+
     res.status(201).json({
-      message: "Registeration successfully",
-      user,
+      success: true,
+      message: "Registration successful",
+      token,
+      user: {
+        _id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+      },
     });
   } catch (error) {
+    console.log(error);
+
     res.status(500).json({
-      message: "Something went wrong here",
-      error: error.message
+      success: false,
+      message: error.message,
     });
   }
-}
+};
 
-//  Login
-export async function Login(req, res) {
+
+// Login User
+
+export const login = async (req, res) => {
   try {
-    const {email, password } = req.body;
-     const user = await User.findOne({email})
-    if(!user){
-      return res.status(404).json({
-        message: "User Not Fount"
-      })
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and Password are required",
+      });
     }
 
-    if(user.password !== password){
-      return res.status(401).json({
-        message: "Invalid Password"
-      })
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
     }
+
+    // Compare Password
+    const isPasswordCorrect = await bcrypt.compare(
+      password,
+      user.password
+    );
+
+    if (!isPasswordCorrect) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials",
+      });
+    }
+
+    const token = jwt.sign(
+      {
+        id: user._id,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "7d",
+      }
+    );
 
     res.status(200).json({
-       message : "Login successfull",
-        user,
+      success: true,
+      message: "Login successful",
+      token,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+      },
     });
   } catch (error) {
-  console.log(error);
+    console.log(error);
 
-  res.status(500).json({
-    message: "Something went wrong",
-    error: error.message,
-  });
-}
-}
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 
-export async function GetUsers(req, res) {
+
+// Get All Users
+
+export const getUsers = async (req, res) => {
   try {
-    const users = await User.find();
+    const users = await User.find().select("-password");
 
     res.status(200).json({
-      message: "Got users successfullyy",
+      success: true,
       users,
     });
   } catch (error) {
+    console.log(error);
+
     res.status(500).json({
-      message: "Something went wrong",
-      error : error.message,
+      success: false,
+      message: error.message,
     });
   }
-}
-
+};

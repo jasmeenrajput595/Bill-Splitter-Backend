@@ -1,304 +1,118 @@
-import Expense from '../models/ExpenseSchema.js'
+import Expense from "../models/Expense.js";
+import calculateBalance from "../utils/calculateBalance.js";
+import Payment from "../models/Payment.js";
+import calculateSettlement from "../utils/calculateSettlement.js";
 
-export async function CreateExpense(req , res){
-    try{
-        // console.log(error)
-        const {expenseName,description ,amount , groupId ,addedBy , splitBetween} = req.body;
-        const expense = new Expense({
-            expenseName,
-            description,
-            amount,
-            groupId,
-            addedBy,
-            splitBetween
-        });
-        await expense.save();
-        res.status(201).json({
-            message : "Expense Created successfully",
-            expense
-        });
-    }catch(error){
-        res.status(500).json({
-            message: "Expense not created..",
-            error
-        });
-    }
-
-}  
-// all expenses get
-
-export async function GetExpenses(req, res) {
+export const createExpense = async (req, res) => {
   try {
-    const expenses = await Expense.find({
-      groupId: req.params.groupId,
-    });
+    const { title, description, amount, group, splitBetween } = req.body;
 
-    res.status(200).json({
-       message : "Expense Created successfully",
-        expenses,
-    });
-  } catch (error) {
-  console.log(error);
-
-  res.status(500).json({
-    message: "Something went wrong",
-    error: error.message,
-  });
-}
-}
-
-
-// getBalance
-
-export async function GetBalance(req, res) {
-  try {
-    const expenses = await Expense.find({
-      groupId: req.params.groupId,
-    });
-
-    const balance = {};
-
-    expenses.forEach((expense) => {
-
-      const totalMembers = expense.splitBetween.length;
-
-      const share = Number((expense.amount / totalMembers).toFixed(2));
-
-      const distributedAmount = share * totalMembers;
-
-      const remainingAmount = Number(
-        (expense.amount - distributedAmount).toFixed(2)
-      );
-
-      if (!balance[expense.addedBy]) {
-        balance[expense.addedBy] = 0;
-      }
-
-      balance[expense.addedBy] += expense.amount;
-
-      expense.splitBetween.forEach((user, index) => {
-
-        if (!balance[user]) {
-          balance[user] = 0;
-        }
-
-        let userShare = share;
-
-        if (index === totalMembers - 1) {
-          userShare += remainingAmount;
-        }
-
-        balance[user] -= userShare;
+    if (!title || !amount || !group || !splitBetween?.length) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
       });
-
-    });
-
-    for (let user in balance) {
-      balance[user] = Number(balance[user].toFixed(2));
     }
 
-    res.status(200).json({
-      message: "Balance Calculated Successfully",
-      balance,
+    const expense = await Expense.create({
+      title,
+      description,
+      amount,
+      group,
+      paidBy: req.user._id,
+      splitBetween,
     });
 
+    res.status(201).json({
+      success: true,
+      message: "Expense created successfully",
+      expense,
+    });
   } catch (error) {
     res.status(500).json({
-      message: "Something went wrong",
-      error: error.message,
+      success: false,
+      message: error.message,
     });
   }
-}
+};
+
+
+
+
+// /getExpenses
+export const getExpenses = async (req, res) => {
+  try {
+    const expenses = await Expense.find({
+      group: req.params.groupId,
+    })
+      .populate("paidBy", "name")
+      .populate("splitBetween", "name");
+
+    res.status(200).json({
+      success: true,
+      expenses,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
+
+//  Getbalance
+export const getBalance = async (req, res) => {
+  try {
+    const expenses = await Expense.find({
+      group: req.params.groupId,
+    });
+
+    const payments = await Payment.find({
+      group: req.params.groupId,
+    });
+
+    const balance = calculateBalance(expenses, payments);
+
+    res.status(200).json({
+      success: true,
+      balance,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 
 
 
 // settleUp
-
-export async function GetSettleUp(req, res) {
+export const getSettleUp = async (req, res) => {
   try {
     const expenses = await Expense.find({
-      groupId: req.params.groupId,
+      group: req.params.groupId,
     });
 
-    const balance = {};
-
-    expenses.forEach((expense) => {
-
-      const totalMembers = expense.splitBetween.length;
-
-      const share = Number(
-        (expense.amount / totalMembers).toFixed(2)
-      );
-
-      const distributedAmount = share * totalMembers;
-
-      const remainingAmount = Number(
-        (expense.amount - distributedAmount).toFixed(2)
-      );
-
-      if (!balance[expense.addedBy]) {
-        balance[expense.addedBy] = 0;
-      }
-
-      balance[expense.addedBy] += expense.amount;
-
-      expense.splitBetween.forEach((user, index) => {
-
-        if (!balance[user]) {
-          balance[user] = 0;
-        }
-
-        let userShare = share;
-
-        if (index === totalMembers - 1) {
-          userShare += remainingAmount;
-        }
-
-        balance[user] -= userShare;
-      });
-
+    const payments = await Payment.find({
+      group: req.params.groupId,
     });
 
-    for (let user in balance) {
-      balance[user] = Number(balance[user].toFixed(2));
-    }
+    const balance = calculateBalance(expenses, payments);
 
-    const transactions = [];
-
-    while (true) {
-
-      let debtor = null;
-      let creditor = null;
-
-      for (let user in balance) {
-        if (balance[user] < 0) {
-          if (
-            debtor === null ||
-            balance[user] < balance[debtor]
-          ) {
-            debtor = user;
-          }
-        }
-      }
-
-      for (let user in balance) {
-        if (balance[user] > 0) {
-          if (
-            creditor === null ||
-            balance[user] > balance[creditor]
-          ) {
-            creditor = user;
-          }
-        }
-      }
-
-      if (debtor === null || creditor === null) {
-        break;
-      }
-
-      const amount = Math.min(
-        Math.abs(balance[debtor]),
-        balance[creditor]
-      );
-
-      transactions.push({
-        from: debtor,
-        to: creditor,
-        amount: Number(amount.toFixed(2)),
-      });
-
-      balance[debtor] += amount;
-      balance[creditor] -= amount;
-
-      balance[debtor] = Number(balance[debtor].toFixed(2));
-      balance[creditor] = Number(balance[creditor].toFixed(2));
-    }
+    const settlements = calculateSettlement(balance);
 
     res.status(200).json({
-      message: "Settle Up Generated Successfully",
-      transactions,
+      success: true,
+      settlements,
     });
 
   } catch (error) {
     res.status(500).json({
-      message: "Something went wrong",
-      error: error.message,
+      success: false,
+      message: error.message,
     });
   }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// export async function GetSettleUp(req, res) {
-//   try {
-//     const expenses = await Expense.find({
-//       groupId: req.params.groupId,
-//     });
-
-//     const balance = {};
-
-//     expenses.forEach((expense) => {
-//       const share = expense.amount / expense.splitBetween.length;
-
-//       if (!balance[expense.addedBy]) {
-//         balance[expense.addedBy] = 0;
-//       }
-
-//       balance[expense.addedBy] += expense.amount;
-
-//       expense.splitBetween.forEach((user) => {
-//         if (!balance[user]) {
-//           balance[user] = 0;
-//         }
-
-//         balance[user] -= share;
-//       });
-//     });
-
-//     const result = [];
-
-//     for (let user in balance) {
-//       if (balance[user] > 0) {
-//         result.push({
-//           user: user,
-//           status: "Receive",
-//           amount: balance[user],
-//         });
-//       } else if (balance[user] < 0) {
-//         result.push({
-//           user: user,
-//           status: "Pay",
-//           amount: Math.abs(balance[user]),
-//         });
-//       } else {
-//         result.push({
-//           user: user,
-//           status: "Settled",
-//           amount: 0,
-//         });
-//       }
-//     }
-
-//     res.status(200).json({
-//       message: "Settle Up Calculated Successfully",
-//       result,
-//     });
-
-//   } catch (error) {
-//     res.status(500).json({
-//       message: "Something went wrong",
-//       error: error.message,
-//     });
-//   }
-// }
+};

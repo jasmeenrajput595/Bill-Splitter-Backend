@@ -1,47 +1,58 @@
-import GroupName from '../models/GroupSchema.js'
+import Group from "../models/Group.js";
 
-export async function CreateGroup(req , res){
-    try{
-        console.log(req.body)
-        const {groupName , userIds} = req.body;
-        const group = new GroupName({
-            groupName,
-            userIds
-            });
-            await group.save();
-            res.status(201).json({
-                message: "Group created successfully",
-                group
-            })
-        }catch(error){
-            res.status(500).json({
-                message : "Something went wrong ",
-                error
-            })
-        }
-}
-
-
-//  get groups..
-export async function GetGroups(req, res) {
+export const createGroup = async (req, res) => {
   try {
-    console.log("user id:", req.params.userId);
+    const { groupName, members } = req.body;
 
-    const groups = await GroupName.find({
-      userIds: req.params.userId,
+    if (!groupName || !members || members.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Group name and members are required",
+      });
+    }
+
+
+    if (!members.includes(req.user._id.toString())) {
+      members.push(req.user._id);
+    }
+
+    const group = await Group.create({
+      groupName,
+      members,
     });
 
-    console.log("Groups found:", groups);
+    res.status(201).json({
+      success: true,
+      message: "Group created successfully",
+      group,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
+// Get groups
+export const getGroups = async (req, res) => {
+  try {
+
+    const groups = await Group.find({
+      members: req.user._id,
+    }).populate("members", "name email");
 
     res.status(200).json({
-      message: "Got Groups successfullyy",
+      success: true,
       groups,
     });
 
   } catch (error) {
     res.status(500).json({
-      message: "Something went wrong",
-      error
+      success: false,
+      message: error.message,
     });
   }
-}
+};
