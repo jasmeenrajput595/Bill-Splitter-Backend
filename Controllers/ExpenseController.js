@@ -2,6 +2,7 @@ import Expense from "../models/Expense.js";
 import calculateBalance from "../utils/calculateBalance.js";
 import Payment from "../models/Payment.js";
 import calculateSettlement from "../utils/calculateSettlement.js";
+import User from "../models/User.js";
 
 export const createExpense = async (req, res) => {
   try {
@@ -104,11 +105,28 @@ export const getSettleUp = async (req, res) => {
 
     const settlements = calculateSettlement(balance);
 
+    const users = await User.find();
+
+    const result = settlements.map((item) => ({
+      from: {
+        _id: item.from,
+        name: users.find(
+          (user) => String(user._id) === String(item.from)
+        )?.name,
+      },
+      to: {
+        _id: item.to,
+        name: users.find(
+          (user) => String(user._id) === String(item.to)
+        )?.name,
+      },
+      amount: item.amount,
+    }));
+
     res.status(200).json({
       success: true,
-      settlements,
+      settlements: result,
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
