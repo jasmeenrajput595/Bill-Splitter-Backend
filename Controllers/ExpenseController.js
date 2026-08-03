@@ -122,7 +122,7 @@ export const getSettleUp = async (req, res) => {
       },
       amount: item.amount,
     }));
-
+console.log(result);
     res.status(200).json({
       success: true,
       settlements: result,

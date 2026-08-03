@@ -8,15 +8,25 @@ const calculateBalance = (expenses, payments = []) => {
 
     balance[paidBy] += expense.amount;
 
-    const share = expense.amount / expense.splitBetween.length;
+    const totalMembers = expense.splitBetween.length;
 
-    expense.splitBetween.forEach((member) => {
-      const memberId = member.toString();
+const share = Math.floor((expense.amount / totalMembers) * 100) / 100;
 
-      if (!balance[memberId]) balance[memberId] = 0;
+const totalShared = share * totalMembers;
 
-      balance[memberId] -= share;
-    });
+const remaining = Number((expense.amount - totalShared).toFixed(2));
+
+expense.splitBetween.forEach((member, index) => {
+  const memberId = member.toString();
+
+  if (!balance[memberId]) balance[memberId] = 0;
+
+  if (index === totalMembers - 1) {
+    balance[memberId] -= share + remaining;
+  } else {
+    balance[memberId] -= share;
+  }
+});
   });
 
 
