@@ -56,3 +56,33 @@ export const getGroups = async (req, res) => {
     });
   }
 };
+
+
+export const addMembers = async (req, res) => {
+  try {
+
+    const {memberIds} = req.body;
+    const group = await Group.findByIdAndUpdate
+      req.params.groupId,
+      memberIds
+      // {
+      //   $addToSet:{
+      //     members :{
+      //       $each : memberIds,
+      //     }
+      //   }
+      // }
+    console.log(memberIds)                                                   
+    res.status(200).json({
+      success: true,
+      group,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+

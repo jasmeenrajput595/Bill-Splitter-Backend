@@ -28,6 +28,12 @@ const expenseSchema = new mongoose.Schema(
         ref:"User",
         required:true
     },
+    // addMembers:[
+    //     {
+    //          type:mongoose.Schema.Types.ObjectId,
+    //         ref:"User"
+    //     }
+    // ],
 
     splitBetween:[
         {

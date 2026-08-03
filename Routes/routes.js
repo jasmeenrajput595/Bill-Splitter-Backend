@@ -6,7 +6,8 @@ import authMiddleware from "../middleware/authMiddleware.js";
 import {
   createGroup,
   getGroups,
-} from "../controllers/groupController.js";
+  addMembers
+} from "../Controllers/GroupController.js";
 
 import {
   createExpense,
@@ -14,7 +15,7 @@ import {
   getBalance,
   getSettleUp,
 } from "../controllers/expenseController.js";
-import { payNow } from "../controllers/paymentController.js";
+import { payNow } from "../Controllers/PaymentController.js";
 
 const router = express.Router();
 
@@ -26,6 +27,7 @@ router.get("/users", authMiddleware, getUsers);
 
 router.post("/groups", authMiddleware, createGroup);
 router.get("/groups", authMiddleware, getGroups);
+router.put("/groups/:groupId/add-member", authMiddleware, addMembers);
 
 
 router.post("/expenses", authMiddleware, createExpense);
